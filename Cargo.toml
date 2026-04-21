@@ -1,6 +1,6 @@
 [package]
 name = "brave-offline-config-editor"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Offline editor for Brave browser configuration — cache, shields, privacy, filters, flags, and raw preferences. Runs while Brave is closed."
 
@@ -18,7 +18,7 @@ egui = "0.29"
 ctrlc = "3"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.52", features = ["Win32_System_Console", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.52", features = ["Win32_System_Console"] }
 
 # Release profile tuned for a smaller, faster-starting binary. opt-level=3
 # (speed) is kept because egui's rendering is measurably affected by "s"/"z"

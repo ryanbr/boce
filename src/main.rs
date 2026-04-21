@@ -1,10 +1,14 @@
-// Intentionally NOT `windows_subsystem = "windows"`. We stay a console-
-// subsystem binary so Ctrl+C in the launching terminal propagates to this
-// process (cmd/PowerShell only wait on console children; a GUI-subsystem
-// child is detached on spawn and never receives Ctrl+C). When the GUI is
-// launched from Explorer — no parent console, so Windows allocates a fresh
-// one just for us — we detect that case and hide the console window so the
-// double-click UX stays clean.
+// Windows-subsystem = "windows" in release builds: no console window is
+// created on launch, so double-clicking the exe from Explorer has no flash.
+// Trade-off: Ctrl+C in a terminal that launched the GUI won't forward to the
+// process (cmd returns to prompt immediately because GUI-subsystem children
+// are detached). Close the GUI window to exit.
+//
+// For CLI subcommands invoked from a terminal we call `AttachConsole` at
+// startup so println!/eprintln! output lands in the parent console. That
+// output may appear after the prompt on short commands (because cmd didn't
+// wait for us) but the information still reaches the user.
+#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 
 mod data;
 mod filters;
@@ -74,31 +78,24 @@ struct Cli {
     cmd: Option<Cmd>,
 }
 
-/// Hide the attached console window iff this process is the only one attached
-/// to it. The 1-process case means Windows allocated the console just for us
-/// (Explorer / shortcut launch); hiding it gives a clean GUI-only UX. When
-/// launched from cmd/PowerShell, the parent is already on the console, so
-/// we leave it alone — the terminal stays visible, cmd waits for us, and
-/// Ctrl+C propagates via the `ctrlc` handler in gui::run.
+/// Attach to the parent console if this GUI-subsystem process was launched
+/// from cmd/PowerShell. That lets println!/eprintln! from CLI subcommands
+/// land in the parent terminal. Returns `true` when we attached (i.e. there
+/// was a parent console to attach to).
+///
+/// Launched from Explorer there's no parent console — AttachConsole returns
+/// zero and we silently continue. Any stdout writes are dropped, which is
+/// fine for GUI-only flows.
 #[cfg(target_os = "windows")]
-fn hide_own_console_if_alone() {
-    use windows_sys::Win32::System::Console::{GetConsoleProcessList, GetConsoleWindow};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{SW_HIDE, ShowWindow};
+fn attach_parent_console_for_cli() {
+    use windows_sys::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole};
     unsafe {
-        let hwnd = GetConsoleWindow();
-        if hwnd == 0 {
-            return;
-        }
-        let mut pids = [0u32; 2];
-        let count = GetConsoleProcessList(pids.as_mut_ptr(), 2);
-        if count == 1 {
-            ShowWindow(hwnd, SW_HIDE);
-        }
+        AttachConsole(ATTACH_PARENT_PROCESS);
     }
 }
 
 #[cfg(not(target_os = "windows"))]
-fn hide_own_console_if_alone() {}
+fn attach_parent_console_for_cli() {}
 
 fn parse_channel(s: &str) -> Result<Channel, String> {
     match s.to_lowercase().as_str() {
@@ -171,18 +168,15 @@ enum ShieldsCmd {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Default to GUI when no subcommand is supplied. Hide the console window
-    // only in that case — CLI subcommands need the console visible for their
-    // output.
+    // Default to GUI when no subcommand is supplied.
     let cmd = match cli.cmd {
         Some(c) => c,
-        None => {
-            hide_own_console_if_alone();
-            return gui::run();
-        }
+        None => return gui::run(),
     };
-    if matches!(cmd, Cmd::Gui) {
-        hide_own_console_if_alone();
+    // Anything other than the explicit Gui subcommand is CLI output; attach
+    // to the parent console (if any) so println! lands in the terminal.
+    if !matches!(cmd, Cmd::Gui) {
+        attach_parent_console_for_cli();
     }
 
     // Mutating commands must refuse to run if Brave is up — Brave rewrites

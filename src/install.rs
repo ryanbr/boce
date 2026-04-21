@@ -64,7 +64,10 @@ fn candidate_roots(ch: Channel) -> Vec<(PathBuf, InstallScope)> {
     let mut out = Vec::new();
     let name = channel_dir_name(ch);
     if let Some(local) = dirs::data_local_dir() {
-        out.push((local.join("BraveSoftware").join(name), InstallScope::PerUser));
+        out.push((
+            local.join("BraveSoftware").join(name),
+            InstallScope::PerUser,
+        ));
     }
     for env_var in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"] {
         if let Ok(pf) = std::env::var(env_var) {
@@ -85,7 +88,10 @@ fn candidate_roots(ch: Channel) -> Vec<(PathBuf, InstallScope)> {
         Channel::Nightly => "brave-nightly",
         Channel::Dev => "brave-dev",
     };
-    vec![(PathBuf::from("/opt/brave.com").join(subdir), InstallScope::System)]
+    vec![(
+        PathBuf::from("/opt/brave.com").join(subdir),
+        InstallScope::System,
+    )]
 }
 
 #[cfg(target_os = "macos")]
@@ -97,7 +103,9 @@ fn candidate_roots(ch: Channel) -> Vec<(PathBuf, InstallScope)> {
         Channel::Dev => "Brave Browser Dev.app",
     };
     vec![(
-        PathBuf::from("/Applications").join(app).join("Contents/MacOS"),
+        PathBuf::from("/Applications")
+            .join(app)
+            .join("Contents/MacOS"),
         InstallScope::System,
     )]
 }
@@ -116,7 +124,12 @@ fn resolve_exe(root: &Path) -> Option<(PathBuf, PathBuf)> {
 
 #[cfg(target_os = "linux")]
 fn resolve_exe(root: &Path) -> Option<(PathBuf, PathBuf)> {
-    for name in ["brave", "brave-browser", "brave-browser-beta", "brave-browser-nightly"] {
+    for name in [
+        "brave",
+        "brave-browser",
+        "brave-browser-beta",
+        "brave-browser-nightly",
+    ] {
         let exe = root.join(name);
         if exe.is_file() {
             return Some((root.to_path_buf(), exe));
@@ -127,7 +140,12 @@ fn resolve_exe(root: &Path) -> Option<(PathBuf, PathBuf)> {
 
 #[cfg(target_os = "macos")]
 fn resolve_exe(root: &Path) -> Option<(PathBuf, PathBuf)> {
-    for name in ["Brave Browser", "Brave Browser Beta", "Brave Browser Nightly", "Brave Browser Dev"] {
+    for name in [
+        "Brave Browser",
+        "Brave Browser Beta",
+        "Brave Browser Nightly",
+        "Brave Browser Dev",
+    ] {
         let exe = root.join(name);
         if exe.is_file() {
             return Some((root.to_path_buf(), exe));
@@ -167,7 +185,10 @@ fn detect_version(application_dir: &Path) -> Option<String> {
 
 fn looks_like_version(s: &str) -> bool {
     let parts: Vec<&str> = s.split('.').collect();
-    parts.len() >= 2 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    parts.len() >= 2
+        && parts
+            .iter()
+            .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
 fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
@@ -185,9 +206,9 @@ pub fn detect_for_channel(ch: Channel) -> Vec<Installation> {
         // %ProgramFiles% and %ProgramW6432% resolve to the same directory on
         // 64-bit Windows; canonicalize and skip if we've already recorded this exe.
         let key = std::fs::canonicalize(&exe).unwrap_or_else(|_| exe.clone());
-        let already_seen = out.iter().any(|i| {
-            std::fs::canonicalize(&i.exe).unwrap_or_else(|_| i.exe.clone()) == key
-        });
+        let already_seen = out
+            .iter()
+            .any(|i| std::fs::canonicalize(&i.exe).unwrap_or_else(|_| i.exe.clone()) == key);
         if already_seen {
             continue;
         }

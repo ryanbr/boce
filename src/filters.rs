@@ -64,7 +64,11 @@ pub fn catalog_path(user_data: &Path) -> Option<PathBuf> {
     versions.sort_by(|a, b| a.0.cmp(&b.0));
     let latest = versions.pop()?.1;
     let catalog = latest.join(CATALOG_FILE_NAME);
-    if catalog.is_file() { Some(catalog) } else { None }
+    if catalog.is_file() {
+        Some(catalog)
+    } else {
+        None
+    }
 }
 
 /// Load + parse the filter-list catalog. Returns an empty list (not an error)
@@ -74,10 +78,10 @@ pub fn load_catalog(user_data: &Path) -> Result<Vec<CatalogEntry>> {
     let Some(path) = catalog_path(user_data) else {
         return Ok(Vec::new());
     };
-    let raw = std::fs::read_to_string(&path)
-        .with_context(|| format!("reading {}", path.display()))?;
-    let mut entries: Vec<CatalogEntry> = serde_json::from_str(&raw)
-        .with_context(|| format!("parsing {}", path.display()))?;
+    let raw =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let mut entries: Vec<CatalogEntry> =
+        serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))?;
     // Pre-sort once at load time so the GUI doesn't re-sort a ~300-entry
     // catalog on every frame.
     entries.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
@@ -103,10 +107,7 @@ pub fn read_subscriptions(root: &serde_json::Value) -> Vec<Subscription> {
         return out;
     };
     for (url, v) in map {
-        let enabled = v
-            .get("enabled")
-            .and_then(|b| b.as_bool())
-            .unwrap_or(false);
+        let enabled = v.get("enabled").and_then(|b| b.as_bool()).unwrap_or(false);
         let title = v.get("title").and_then(|t| t.as_str()).map(str::to_string);
         let last_update = v
             .get("last_successful_update_attempt")
@@ -153,10 +154,7 @@ pub fn write_regional_enabled(
     let obj = entry
         .as_object_mut()
         .ok_or_else(|| anyhow::anyhow!("regional entry for {} is not an object", uuid))?;
-    obj.insert(
-        "enabled".to_string(),
-        serde_json::Value::Bool(enabled),
-    );
+    obj.insert("enabled".to_string(), serde_json::Value::Bool(enabled));
     Ok(())
 }
 
@@ -178,10 +176,7 @@ pub fn write_subscription_enabled(
     let obj = entry
         .as_object_mut()
         .ok_or_else(|| anyhow::anyhow!("subscription entry is not an object"))?;
-    obj.insert(
-        "enabled".to_string(),
-        serde_json::Value::Bool(enabled),
-    );
+    obj.insert("enabled".to_string(), serde_json::Value::Bool(enabled));
     Ok(())
 }
 

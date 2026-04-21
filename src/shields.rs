@@ -45,11 +45,12 @@ impl ValueEnc {
             ValueEnc::Int(n) => v.as_i64() == Some(n),
             ValueEnc::Bool(b) => v.as_bool() == Some(b),
             ValueEnc::Str(s) => v.as_str() == Some(s),
-            ValueEnc::Dict(k, n) => v
-                .as_object()
-                .and_then(|m| m.get(k))
-                .and_then(|x| x.as_i64())
-                == Some(n),
+            ValueEnc::Dict(k, n) => {
+                v.as_object()
+                    .and_then(|m| m.get(k))
+                    .and_then(|x| x.as_i64())
+                    == Some(n)
+            }
         }
     }
 }
@@ -151,10 +152,7 @@ pub const KEYS: &[ShieldKey] = &[
                 writes: &[
                     WriteTarget::Exception(EX_SHIELDS_ADS, ValueEnc::Int(1)),
                     WriteTarget::Exception(EX_TRACKERS, ValueEnc::Int(1)),
-                    WriteTarget::Exception(
-                        EX_COSMETIC_V2,
-                        ValueEnc::Dict(COSMETIC_V2_INNER, 0),
-                    ),
+                    WriteTarget::Exception(EX_COSMETIC_V2, ValueEnc::Dict(COSMETIC_V2_INNER, 0)),
                 ],
             },
             ShieldValue {
@@ -162,10 +160,7 @@ pub const KEYS: &[ShieldKey] = &[
                 writes: &[
                     WriteTarget::Exception(EX_SHIELDS_ADS, ValueEnc::Int(2)),
                     WriteTarget::Exception(EX_TRACKERS, ValueEnc::Int(2)),
-                    WriteTarget::Exception(
-                        EX_COSMETIC_V2,
-                        ValueEnc::Dict(COSMETIC_V2_INNER, 2),
-                    ),
+                    WriteTarget::Exception(EX_COSMETIC_V2, ValueEnc::Dict(COSMETIC_V2_INNER, 2)),
                 ],
             },
             ShieldValue {
@@ -173,10 +168,7 @@ pub const KEYS: &[ShieldKey] = &[
                 writes: &[
                     WriteTarget::Exception(EX_SHIELDS_ADS, ValueEnc::Int(2)),
                     WriteTarget::Exception(EX_TRACKERS, ValueEnc::Int(2)),
-                    WriteTarget::Exception(
-                        EX_COSMETIC_V2,
-                        ValueEnc::Dict(COSMETIC_V2_INNER, 1),
-                    ),
+                    WriteTarget::Exception(EX_COSMETIC_V2, ValueEnc::Dict(COSMETIC_V2_INNER, 1)),
                 ],
             },
         ],
@@ -293,11 +285,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("brave.de_amp.enabled", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "brave.de_amp.enabled",
+                    ValueEnc::Bool(false),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("brave.de_amp.enabled", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "brave.de_amp.enabled",
+                    ValueEnc::Bool(true),
+                )],
             },
         ],
     },
@@ -311,11 +309,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("brave.debounce.enabled", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "brave.debounce.enabled",
+                    ValueEnc::Bool(false),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("brave.debounce.enabled", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "brave.debounce.enabled",
+                    ValueEnc::Bool(true),
+                )],
             },
         ],
     },
@@ -329,11 +333,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("brave.reduce_language", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "brave.reduce_language",
+                    ValueEnc::Bool(false),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("brave.reduce_language", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "brave.reduce_language",
+                    ValueEnc::Bool(true),
+                )],
             },
         ],
     },
@@ -348,11 +358,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("enable_do_not_track", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "enable_do_not_track",
+                    ValueEnc::Bool(false),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("enable_do_not_track", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "enable_do_not_track",
+                    ValueEnc::Bool(true),
+                )],
             },
         ],
     },
@@ -490,11 +506,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("tor.tor_disabled", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "tor.tor_disabled",
+                    ValueEnc::Bool(true),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("tor.tor_disabled", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "tor.tor_disabled",
+                    ValueEnc::Bool(false),
+                )],
             },
         ],
     },
@@ -534,11 +556,17 @@ pub const KEYS: &[ShieldKey] = &[
         values: &[
             ShieldValue {
                 symbol: "off",
-                writes: &[WriteTarget::Direct("background_mode.enabled", ValueEnc::Bool(false))],
+                writes: &[WriteTarget::Direct(
+                    "background_mode.enabled",
+                    ValueEnc::Bool(false),
+                )],
             },
             ShieldValue {
                 symbol: "on",
-                writes: &[WriteTarget::Direct("background_mode.enabled", ValueEnc::Bool(true))],
+                writes: &[WriteTarget::Direct(
+                    "background_mode.enabled",
+                    ValueEnc::Bool(true),
+                )],
             },
         ],
     },

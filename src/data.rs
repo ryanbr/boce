@@ -288,17 +288,13 @@ fn target_size(base: &Path, tgt: &str) -> u64 {
 }
 
 fn clear_dir_contents(dir: &Path) -> Result<()> {
-    for entry in std::fs::read_dir(dir)
-        .with_context(|| format!("reading {}", dir.display()))?
-    {
+    for entry in std::fs::read_dir(dir).with_context(|| format!("reading {}", dir.display()))? {
         let entry = entry?;
         let p = entry.path();
         if entry.file_type()?.is_dir() {
-            std::fs::remove_dir_all(&p)
-                .with_context(|| format!("removing dir {}", p.display()))?;
+            std::fs::remove_dir_all(&p).with_context(|| format!("removing dir {}", p.display()))?;
         } else {
-            std::fs::remove_file(&p)
-                .with_context(|| format!("removing file {}", p.display()))?;
+            std::fs::remove_file(&p).with_context(|| format!("removing file {}", p.display()))?;
         }
     }
     Ok(())

@@ -44,9 +44,10 @@ pub fn is_brave_running_for_install(install_root: &Path) -> bool {
         }
         // Primary: exe() — only works if we can open the process handle.
         if let Some(exe) = proc_.exe()
-            && path_starts_with(exe, install_root) {
-                return true;
-            }
+            && path_starts_with(exe, install_root)
+        {
+            return true;
+        }
         // Fallback 1: inspect the command line. Child renderer/utility
         // processes often have the exe path or `--type=...` args that include
         // the install dir.

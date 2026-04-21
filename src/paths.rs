@@ -9,7 +9,12 @@ pub enum Channel {
 }
 
 impl Channel {
-    pub const ALL: [Channel; 4] = [Channel::Stable, Channel::Beta, Channel::Nightly, Channel::Dev];
+    pub const ALL: [Channel; 4] = [
+        Channel::Stable,
+        Channel::Beta,
+        Channel::Nightly,
+        Channel::Dev,
+    ];
 
     pub fn name(self) -> &'static str {
         match self {
@@ -60,7 +65,11 @@ pub fn channel_paths(ch: Channel) -> Option<ChannelPaths> {
         .join(ch.dir_suffix())
         .join("User Data");
     let cache_root = user_data.clone();
-    Some(ChannelPaths { channel: ch, user_data, cache_root })
+    Some(ChannelPaths {
+        channel: ch,
+        user_data,
+        cache_root,
+    })
 }
 
 #[cfg(target_os = "linux")]
@@ -69,7 +78,11 @@ pub fn channel_paths(ch: Channel) -> Option<ChannelPaths> {
     let cache = dirs::cache_dir()?;
     let user_data = config.join("BraveSoftware").join(ch.dir_suffix());
     let cache_root = cache.join("BraveSoftware").join(ch.dir_suffix());
-    Some(ChannelPaths { channel: ch, user_data, cache_root })
+    Some(ChannelPaths {
+        channel: ch,
+        user_data,
+        cache_root,
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -81,7 +94,11 @@ pub fn channel_paths(ch: Channel) -> Option<ChannelPaths> {
     let cache_root = home
         .join("Library/Caches/BraveSoftware")
         .join(ch.dir_suffix());
-    Some(ChannelPaths { channel: ch, user_data, cache_root })
+    Some(ChannelPaths {
+        channel: ch,
+        user_data,
+        cache_root,
+    })
 }
 
 pub fn installed_channels() -> Vec<ChannelPaths> {

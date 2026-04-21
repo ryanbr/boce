@@ -5,10 +5,10 @@ use serde_json::Value;
 
 /// Read `Preferences` as a JSON `Value`, preserving key order.
 pub fn read_prefs(path: &Path) -> Result<Value> {
-    let raw = std::fs::read_to_string(path)
-        .with_context(|| format!("reading {}", path.display()))?;
-    let v: Value = serde_json::from_str(&raw)
-        .with_context(|| format!("parsing {}", path.display()))?;
+    let raw =
+        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let v: Value =
+        serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))?;
     Ok(v)
 }
 
@@ -20,10 +20,8 @@ pub fn write_prefs(path: &Path, value: &Value) -> Result<PathBuf> {
 
     let tmp = path.with_extension("brave-config.tmp");
     let pretty = serde_json::to_string(value).context("serializing Preferences")?;
-    std::fs::write(&tmp, pretty)
-        .with_context(|| format!("writing {}", tmp.display()))?;
-    std::fs::rename(&tmp, path)
-        .with_context(|| format!("replacing {}", path.display()))?;
+    std::fs::write(&tmp, pretty).with_context(|| format!("writing {}", tmp.display()))?;
+    std::fs::rename(&tmp, path).with_context(|| format!("replacing {}", path.display()))?;
 
     Ok(backup)
 }

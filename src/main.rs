@@ -200,7 +200,11 @@ fn main() -> Result<()> {
     match cmd {
         Cmd::Gui => gui::run(),
         Cmd::List => cmd_list(),
-        Cmd::ClearCache { profile, all, dry_run } => {
+        Cmd::ClearCache {
+            profile,
+            all,
+            dry_run,
+        } => {
             let paths = select_channel(cli.channel)?;
             cmd_clear_cache(&paths, profile.as_deref(), all, dry_run)
         }
@@ -213,7 +217,11 @@ fn main() -> Result<()> {
             let prof = resolve_profile_dir(&paths, profile.as_deref())?;
             cmd_shields_get(&paths, &prof, key.as_deref())
         }
-        Cmd::Shields(ShieldsCmd::Set { profile, key, value }) => {
+        Cmd::Shields(ShieldsCmd::Set {
+            profile,
+            key,
+            value,
+        }) => {
             let paths = select_channel(cli.channel)?;
             let prof = resolve_profile_dir(&paths, profile.as_deref())?;
             cmd_shields_set(&paths, &prof, &key, &value)
@@ -325,8 +333,7 @@ fn cmd_clear_cache(
     // of the Delete Data flow. All other categories (history / cookies /
     // passwords / autofill) require explicit user intent and live only in the
     // GUI's Delete Data tab.
-    let cat = data::lookup("cache")
-        .ok_or_else(|| anyhow!("internal: cache category missing"))?;
+    let cat = data::lookup("cache").ok_or_else(|| anyhow!("internal: cache category missing"))?;
 
     let mut total: u64 = 0;
     for prof in &targets {

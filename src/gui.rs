@@ -155,9 +155,10 @@ impl App {
     fn refresh_all(&mut self) {
         self.installs = install::detect_all();
         if self.selected_channel.is_none()
-            && let Some(first) = self.installs.first() {
-                self.selected_channel = Some(first.channel);
-            }
+            && let Some(first) = self.installs.first()
+        {
+            self.selected_channel = Some(first.channel);
+        }
         self.reload_channel();
         self.refresh_brave_running();
     }
@@ -224,16 +225,17 @@ impl App {
 
             if let Ok(root) = prefs::read_prefs(&p.local_state_path()) {
                 if let Some(v) = prefs::get_path(&root, "browser.enabled_labs_experiments")
-                    && let Some(arr) = v.as_array() {
-                        let list: Vec<String> = arr
-                            .iter()
-                            .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                            .collect();
-                        self.flags_original = list.clone();
-                        self.flags_working = list;
-                    }
-                if let Some(dict) = prefs::get_path(&root, filters::PREF_REGIONAL)
-                    .and_then(|v| v.as_object())
+                    && let Some(arr) = v.as_array()
+                {
+                    let list: Vec<String> = arr
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect();
+                    self.flags_original = list.clone();
+                    self.flags_working = list;
+                }
+                if let Some(dict) =
+                    prefs::get_path(&root, filters::PREF_REGIONAL).and_then(|v| v.as_object())
                 {
                     for (uuid, entry) in dict {
                         if let Some(en) = entry.get("enabled").and_then(|b| b.as_bool()) {
@@ -265,7 +267,9 @@ impl App {
         self.gs_startup_original = None;
         self.gs_startup_working = None;
 
-        let Some(prof) = self.current_profile().cloned() else { return };
+        let Some(prof) = self.current_profile().cloned() else {
+            return;
+        };
 
         let prefs_root = prefs::read_prefs(&prof.prefs_path()).ok();
         let local_state_root = self
@@ -291,8 +295,7 @@ impl App {
                 .to_string();
             self.gs_profile_name_original = name.clone();
             self.gs_profile_name_working = name;
-            let startup = prefs::get_path(r, "session.restore_on_startup")
-                .and_then(|v| v.as_i64());
+            let startup = prefs::get_path(r, "session.restore_on_startup").and_then(|v| v.as_i64());
             self.gs_startup_original = startup;
             self.gs_startup_working = startup;
         }
@@ -353,7 +356,9 @@ impl App {
 
         let mut changes: Vec<(&'static ShieldKey, &'static ShieldValue)> = Vec::new();
         for k in shields::KEYS {
-            let Some(sym) = self.shield_pending.get(k.name) else { continue };
+            let Some(sym) = self.shield_pending.get(k.name) else {
+                continue;
+            };
             if sym.is_empty() || sym == "(keep)" {
                 continue;
             }
@@ -512,7 +517,8 @@ impl App {
         };
         let diffs = prefs::diff_values(&a, &b);
         if diffs.is_empty() {
-            self.diff_output.push("(identical — no differences)".to_string());
+            self.diff_output
+                .push("(identical — no differences)".to_string());
         } else {
             self.diff_output
                 .push(format!("{} difference(s):", diffs.len()));
@@ -522,7 +528,11 @@ impl App {
                     .as_ref()
                     .map(|v| {
                         let s = v.to_string();
-                        if s.len() > 120 { format!("{}…", &s[..120]) } else { s }
+                        if s.len() > 120 {
+                            format!("{}…", &s[..120])
+                        } else {
+                            s
+                        }
                     })
                     .unwrap_or_else(|| "<missing>".to_string());
                 let r = d
@@ -530,14 +540,21 @@ impl App {
                     .as_ref()
                     .map(|v| {
                         let s = v.to_string();
-                        if s.len() > 120 { format!("{}…", &s[..120]) } else { s }
+                        if s.len() > 120 {
+                            format!("{}…", &s[..120])
+                        } else {
+                            s
+                        }
                     })
                     .unwrap_or_else(|| "<missing>".to_string());
-                self.diff_output
-                    .push(format!("{}\n    backup : {}\n    current: {}", d.path, l, r));
+                self.diff_output.push(format!(
+                    "{}\n    backup : {}\n    current: {}",
+                    d.path, l, r
+                ));
             }
             if diffs.len() > 300 {
-                self.diff_output.push(format!("… and {} more", diffs.len() - 300));
+                self.diff_output
+                    .push(format!("… and {} more", diffs.len() - 300));
             }
         }
         self.diff_from = Some(backup);
@@ -660,7 +677,11 @@ impl App {
         match prefs::write_prefs(&path, &parsed) {
             Ok(bkp) => {
                 self.prefs_dirty = false;
-                self.set_status(format!("saved {} (backup: {})", path.display(), bkp.display()));
+                self.set_status(format!(
+                    "saved {} (backup: {})",
+                    path.display(),
+                    bkp.display()
+                ));
                 self.reload_profile_views();
             }
             Err(e) => self.set_error(format!("write: {}", e)),
@@ -696,12 +717,19 @@ impl App {
             let mut sub = 0u64;
             for c in &cats {
                 let s = data::size_of(&paths, p, c);
-                self.last_data_report
-                    .push(format!("[{}] {}: {}", p.dir_name, c.label, data::format_bytes(s)));
+                self.last_data_report.push(format!(
+                    "[{}] {}: {}",
+                    p.dir_name,
+                    c.label,
+                    data::format_bytes(s)
+                ));
                 sub += s;
             }
-            self.last_data_report
-                .push(format!("[{}] subtotal: {}", p.dir_name, data::format_bytes(sub)));
+            self.last_data_report.push(format!(
+                "[{}] subtotal: {}",
+                p.dir_name,
+                data::format_bytes(sub)
+            ));
             total += sub;
         }
         self.last_data_report
@@ -959,10 +987,11 @@ impl App {
         }
         let custom_changed = self.filter_custom_working != self.filter_custom_original;
         if custom_changed
-            && let Err(e) = filters::write_custom_filters(&mut root, &self.filter_custom_working) {
-                self.set_error(format!("write custom_filters: {}", e));
-                return;
-            }
+            && let Err(e) = filters::write_custom_filters(&mut root, &self.filter_custom_working)
+        {
+            self.set_error(format!("write custom_filters: {}", e));
+            return;
+        }
         let backup = match prefs::write_prefs(&ls_path, &root) {
             Ok(b) => b,
             Err(e) => {
@@ -984,7 +1013,8 @@ impl App {
                 break;
             }
         }
-        if verified && custom_changed
+        if verified
+            && custom_changed
             && filters::read_custom_filters(&disk) != self.filter_custom_working
         {
             verified = false;
@@ -1001,7 +1031,11 @@ impl App {
                 "filters applied ({} regional, {} sub ops, custom {}); backup: {}",
                 regional_applied,
                 sub_applied,
-                if custom_changed { "updated" } else { "unchanged" },
+                if custom_changed {
+                    "updated"
+                } else {
+                    "unchanged"
+                },
                 backup.display()
             ));
         } else {
@@ -1038,20 +1072,22 @@ impl App {
                 &mut root,
                 "profile.name",
                 serde_json::Value::String(self.gs_profile_name_working.clone()),
-            ) {
-                self.set_error(format!("set profile.name: {}", e));
-                return;
-            }
+            )
+        {
+            self.set_error(format!("set profile.name: {}", e));
+            return;
+        }
         if startup_dirty
             && let Some(v) = self.gs_startup_working
-                && let Err(e) = prefs::set_path(
-                    &mut root,
-                    "session.restore_on_startup",
-                    serde_json::Value::from(v),
-                ) {
-                    self.set_error(format!("set startup: {}", e));
-                    return;
-                }
+            && let Err(e) = prefs::set_path(
+                &mut root,
+                "session.restore_on_startup",
+                serde_json::Value::from(v),
+            )
+        {
+            self.set_error(format!("set startup: {}", e));
+            return;
+        }
         let backup = match prefs::write_prefs(&path, &root) {
             Ok(b) => b,
             Err(e) => {
@@ -1067,12 +1103,9 @@ impl App {
                 .map(|s| s == self.gs_profile_name_working.as_str())
                 .unwrap_or(false);
         let startup_ok = !startup_dirty
-            || disk
-                .as_ref()
-                .and_then(|r| {
-                    prefs::get_path(r, "session.restore_on_startup").and_then(|v| v.as_i64())
-                })
-                == self.gs_startup_working;
+            || disk.as_ref().and_then(|r| {
+                prefs::get_path(r, "session.restore_on_startup").and_then(|v| v.as_i64())
+            }) == self.gs_startup_working;
         if name_ok && startup_ok {
             self.gs_profile_name_original = self.gs_profile_name_working.clone();
             self.gs_startup_original = self.gs_startup_working;
@@ -1223,7 +1256,10 @@ impl eframe::App for App {
 
         egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
             if let Some(err) = &self.error {
-                ui.colored_label(egui::Color32::from_rgb(200, 80, 80), format!("Error: {}", err));
+                ui.colored_label(
+                    egui::Color32::from_rgb(200, 80, 80),
+                    format!("Error: {}", err),
+                );
             } else if !self.status.is_empty() {
                 ui.label(&self.status);
             } else {
@@ -1363,11 +1399,7 @@ impl App {
                     .spacing([12.0, 4.0])
                     .show(ui, |ui| {
                         ui.label(k.name).on_hover_text(k.desc);
-                        let current_sym = self
-                            .shield_current
-                            .get(k.name)
-                            .cloned()
-                            .unwrap_or(None);
+                        let current_sym = self.shield_current.get(k.name).cloned().unwrap_or(None);
                         let current_str = current_sym.unwrap_or("<default>").to_string();
                         ui.label(current_str);
                         let pending = self
@@ -1379,11 +1411,7 @@ impl App {
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(pending, "(keep)".to_string(), "(keep)");
                                 for v in k.values {
-                                    ui.selectable_value(
-                                        pending,
-                                        v.symbol.to_string(),
-                                        v.symbol,
-                                    );
+                                    ui.selectable_value(pending, v.symbol.to_string(), v.symbol);
                                 }
                             });
                         ui.end_row();
@@ -1487,11 +1515,9 @@ impl App {
                         ui.weak("(catalog unavailable and no regional overrides stored)");
                     } else {
                         ui.label(
-                            egui::RichText::new(
-                                "Catalog file missing; showing raw UUIDs only.",
-                            )
-                            .small()
-                            .weak(),
+                            egui::RichText::new("Catalog file missing; showing raw UUIDs only.")
+                                .small()
+                                .weak(),
                         );
                         let uuids: Vec<String> =
                             self.filter_regional_current.keys().cloned().collect();
@@ -1569,9 +1595,10 @@ impl App {
                         }
                         ui.vertical(|ui| {
                             if let Some(title) = &sub.title
-                                && !title.is_empty() {
-                                    ui.label(title);
-                                }
+                                && !title.is_empty()
+                            {
+                                ui.label(title);
+                            }
                             ui.monospace(&sub.url);
                         });
                     });
@@ -1584,10 +1611,7 @@ impl App {
                     if ui.button("Add").clicked() {
                         let u = self.filter_sub_add_buffer.trim().to_string();
                         if !u.is_empty()
-                            && !self
-                                .filter_subscriptions_current
-                                .iter()
-                                .any(|s| s.url == u)
+                            && !self.filter_subscriptions_current.iter().any(|s| s.url == u)
                         {
                             self.filter_subscriptions_current
                                 .push(filters::Subscription {
@@ -1624,13 +1648,11 @@ impl App {
     fn ui_filter_row(&mut self, ui: &mut egui::Ui, uuid: &str, label: &str, default_enabled: bool) {
         let stored = self.filter_regional_current.get(uuid).copied();
         let effective = stored.unwrap_or(default_enabled);
-        let mut pending = *self
-            .filter_regional_pending
-            .get(uuid)
-            .unwrap_or(&effective);
+        let mut pending = *self.filter_regional_pending.get(uuid).unwrap_or(&effective);
         ui.horizontal(|ui| {
             if ui.checkbox(&mut pending, "").changed() {
-                self.filter_regional_pending.insert(uuid.to_string(), pending);
+                self.filter_regional_pending
+                    .insert(uuid.to_string(), pending);
             }
             let pending_marker = if pending != effective { " *" } else { "" };
             let default_marker = match stored {
@@ -1799,9 +1821,10 @@ impl App {
                     if ui.button("Cancel").clicked() {
                         cancel = true;
                     }
-                    let delete_btn =
-                        egui::Button::new(egui::RichText::new("Delete").color(egui::Color32::WHITE))
-                            .fill(egui::Color32::from_rgb(160, 40, 40));
+                    let delete_btn = egui::Button::new(
+                        egui::RichText::new("Delete").color(egui::Color32::WHITE),
+                    )
+                    .fill(egui::Color32::from_rgb(160, 40, 40));
                     if ui.add(delete_btn).clicked() {
                         confirm = true;
                     }
@@ -1961,10 +1984,18 @@ impl App {
             {
                 self.do_load_preferences();
             }
-            if ui.button("Pretty").on_hover_text("Reformat JSON with indentation").clicked() {
+            if ui
+                .button("Pretty")
+                .on_hover_text("Reformat JSON with indentation")
+                .clicked()
+            {
                 self.do_prettify_preferences();
             }
-            if ui.button("Minify").on_hover_text("Collapse to one line (Brave's own format)").clicked() {
+            if ui
+                .button("Minify")
+                .on_hover_text("Collapse to one line (Brave's own format)")
+                .clicked()
+            {
                 self.do_minify_preferences();
             }
             let save = egui::Button::new("Save (validate + backup)");
@@ -1981,10 +2012,7 @@ impl App {
         if let Some(path) = self.prefs_loaded_from.clone() {
             ui.horizontal(|ui| {
                 if loaded_is_backup {
-                    ui.colored_label(
-                        egui::Color32::from_rgb(220, 140, 30),
-                        "Editing BACKUP →",
-                    );
+                    ui.colored_label(egui::Color32::from_rgb(220, 140, 30), "Editing BACKUP →");
                 } else {
                     ui.label("File:");
                 }
@@ -2090,7 +2118,9 @@ impl App {
             if let Some(p) = &self.diff_from {
                 ui.label(format!(
                     "Diff: {} vs current Preferences",
-                    p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
+                    p.file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default()
                 ));
             }
             egui::ScrollArea::vertical()
@@ -2125,4 +2155,3 @@ pub fn run() -> Result<()> {
     )
     .map_err(|e| anyhow::anyhow!("GUI error: {}", e))
 }
-

@@ -1,18 +1,27 @@
 name: Release
 
-# Builds release binaries for Linux x64, Windows x64, macOS Apple Silicon,
-# and macOS Intel. Triggered by pushing a version tag (e.g. `v0.1.0`) or
-# manually via workflow_dispatch.
+# Builds release binaries for Linux x64, Windows x64, Windows ARM64,
+# and macOS Apple Silicon. Two ways to trigger:
 #
-# On a tag push, a GitHub Release is created automatically and all four
-# artifacts are attached. workflow_dispatch runs still produce artifacts but
-# don't create a Release (test runs).
+#   1. Push a tag `vX.Y.Z` — a Release is created against that tag.
+#   2. "Run workflow" from the Actions tab with a version string
+#      (e.g. "0.1.4") — the workflow tags the current commit and
+#      publishes a Release on its own. No local git tag command needed.
+#
+# Running via workflow_dispatch with an EMPTY version input just produces
+# uploadable artifacts for testing; no tag and no Release are created.
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (no v prefix, e.g. 0.1.4). Leave blank for a test build with no tag/release.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -21,8 +30,35 @@ env:
   BINARY_NAME: brave-offline-config-editor
 
 jobs:
+  # Compute the version once so every matrix build and the release job
+  # agree. Also decides whether a Release should be published.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.decide.outputs.version }}
+      publish: ${{ steps.decide.outputs.publish }}
+    steps:
+      - name: Decide version + publish flag
+        id: decide
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            PUBLISH="true"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
+            PUBLISH="true"
+          else
+            VERSION=""
+            PUBLISH="false"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "Resolved: version='$VERSION' publish=$PUBLISH"
+
   build:
     name: Build ${{ matrix.name }}
+    needs: prepare
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -81,17 +117,14 @@ jobs:
             libxi-dev \
             libgl1-mesa-dev
 
-      # Derive the crate version from the git tag (e.g. v0.1.4 -> 0.1.4) and
-      # rewrite Cargo.toml's placeholder so the produced binary reports the
-      # real version via --version. This only affects this CI build — the
-      # edit is discarded when the runner tears down. workflow_dispatch
-      # runs without a tag keep the "0.0.0-dev" placeholder.
-      - name: Set crate version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Rewrite Cargo.toml's "0.0.0-dev" placeholder to the resolved version
+      # so the produced binary reports the real version via --version.
+      # Only happens when the prepare job decided we're publishing.
+      - name: Set crate version
+        if: needs.prepare.outputs.publish == 'true'
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           echo "Setting Cargo.toml version to $VERSION"
           sed -i.bak -E "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
           rm -f Cargo.toml.bak
@@ -104,7 +137,6 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          # Name pattern: <binary>-<os+arch>.<ext>  (ext is "" or ".exe")
           cp "target/${{ matrix.target }}/release/${{ env.BINARY_NAME }}${{ matrix.ext }}" \
              "dist/${{ env.BINARY_NAME }}-${{ matrix.name }}${{ matrix.ext }}"
 
@@ -117,13 +149,15 @@ jobs:
 
   release:
     name: Attach to GitHub Release
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
-    # Only create/update a Release when triggered by a tag push.
-    # workflow_dispatch runs stop after the build step (artifacts are still
-    # downloadable from the Actions run page).
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: needs.prepare.outputs.publish == 'true'
     steps:
+      - name: Checkout source
+        # softprops/action-gh-release needs the repo to be checked out so it
+        # can resolve refs and create the tag against the current SHA.
+        uses: actions/checkout@v5
+
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
@@ -135,9 +169,14 @@ jobs:
           find artifacts -type f -exec cp {} release/ \;
           ls -la release/
 
+      # tag_name tells softprops to create the tag on the current SHA when
+      # the workflow is triggered by workflow_dispatch. On tag-push triggers
+      # the tag already exists and tag_name matches — same effect.
       - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          name: v${{ needs.prepare.outputs.version }}
           files: release/*
           generate_release_notes: true
           fail_on_unmatched_files: true

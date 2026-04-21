@@ -44,10 +44,11 @@ jobs:
             runner: macos-14
             target: aarch64-apple-darwin
             ext: ""
-          - name: macos-x64
-            runner: macos-13
-            target: x86_64-apple-darwin
-            ext: ""
+          # macos-x64 intentionally absent: GitHub's macos-13 Intel runners
+          # hit long queue times that stalled the gated release job on v0.1.0.
+          # Apple-Silicon Macs (macos-14) build both arches if needed —
+          # cross-compile x86_64-apple-darwin via a separate job on macos-14
+          # if/when Intel-Mac coverage becomes necessary.
 
     steps:
       - name: Checkout source

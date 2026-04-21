@@ -76,8 +76,11 @@ pub fn load_catalog(user_data: &Path) -> Result<Vec<CatalogEntry>> {
     };
     let raw = std::fs::read_to_string(&path)
         .with_context(|| format!("reading {}", path.display()))?;
-    let entries: Vec<CatalogEntry> = serde_json::from_str(&raw)
+    let mut entries: Vec<CatalogEntry> = serde_json::from_str(&raw)
         .with_context(|| format!("parsing {}", path.display()))?;
+    // Pre-sort once at load time so the GUI doesn't re-sort a ~300-entry
+    // catalog on every frame.
+    entries.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
     Ok(entries)
 }
 

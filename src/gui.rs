@@ -1101,11 +1101,15 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.request_repaint_after(std::time::Duration::from_secs(2));
+        // Low-frequency poll for "is Brave running" so the banner flips when
+        // the user closes Brave. 3s keeps us out of the tight repaint loop
+        // without making the state feel laggy; the user can also click the
+        // Recheck button for an instant update.
+        ctx.request_repaint_after(std::time::Duration::from_secs(3));
         let now = std::time::Instant::now();
         let stale = self
             .last_process_poll
-            .map(|t| now.duration_since(t).as_secs() >= 2)
+            .map(|t| now.duration_since(t).as_secs() >= 3)
             .unwrap_or(true);
         if stale {
             self.refresh_brave_running();
@@ -1496,32 +1500,39 @@ impl App {
                         }
                     }
                 } else {
-                    let mut entries: Vec<filters::CatalogEntry> = self
+                    // Catalog is pre-sorted at load time. We only clone the
+                    // (uuid, label, default) triples we'll actually render —
+                    // cheaper than cloning every CatalogEntry per frame just
+                    // to satisfy the &self / &mut self borrow split.
+                    let needle = self.filter_search.to_lowercase();
+                    let rows: Vec<(String, String, bool)> = self
                         .filter_catalog
                         .iter()
                         .filter(|e| !e.hidden)
-                        .cloned()
-                        .collect();
-                    entries.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
-                    let needle = self.filter_search.to_lowercase();
-                    for entry in &entries {
-                        if !needle.is_empty() {
-                            let hay = format!(
-                                "{} {} {}",
-                                entry.title.to_lowercase(),
-                                entry.uuid.to_lowercase(),
-                                entry.langs.join(",").to_lowercase()
-                            );
-                            if !hay.contains(&needle) {
-                                continue;
+                        .filter(|e| {
+                            if needle.is_empty() {
+                                true
+                            } else {
+                                let hay = format!(
+                                    "{} {} {}",
+                                    e.title.to_lowercase(),
+                                    e.uuid.to_lowercase(),
+                                    e.langs.join(",").to_lowercase()
+                                );
+                                hay.contains(&needle)
                             }
-                        }
-                        let label = if entry.langs.is_empty() {
-                            entry.title.clone()
-                        } else {
-                            format!("{} [{}]", entry.title, entry.langs.join(","))
-                        };
-                        self.ui_filter_row(ui, &entry.uuid, &label, entry.default_enabled);
+                        })
+                        .map(|e| {
+                            let label = if e.langs.is_empty() {
+                                e.title.clone()
+                            } else {
+                                format!("{} [{}]", e.title, e.langs.join(","))
+                            };
+                            (e.uuid.clone(), label, e.default_enabled)
+                        })
+                        .collect();
+                    for (uuid, label, default_enabled) in &rows {
+                        self.ui_filter_row(ui, uuid, label, *default_enabled);
                     }
                 }
 

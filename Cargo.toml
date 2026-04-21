@@ -19,3 +19,13 @@ ctrlc = "3"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_System_Console", "Win32_UI_WindowsAndMessaging"] }
+
+# Release profile tuned for a smaller, faster-starting binary. opt-level=3
+# (speed) is kept because egui's rendering is measurably affected by "s"/"z"
+# optimization levels.
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

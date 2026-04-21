@@ -8,7 +8,10 @@
 // startup so println!/eprintln! output lands in the parent console. That
 // output may appear after the prompt on short commands (because cmd didn't
 // wait for us) but the information still reaches the user.
-#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(target_os = "windows", not(debug_assertions)),
+    windows_subsystem = "windows"
+)]
 
 mod data;
 mod filters;

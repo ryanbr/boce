@@ -8,6 +8,7 @@ fn main() {
         res.set_icon("assets/icon.ico");
         // Fail the build if the icon can't be embedded — silent failure here
         // would ship an icon-less exe.
-        res.compile().expect("failed to embed Windows icon resource");
+        res.compile()
+            .expect("failed to embed Windows icon resource");
     }
 }

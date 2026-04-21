@@ -2135,17 +2135,22 @@ impl App {
 }
 
 pub fn run() -> Result<()> {
-    // Translate CTRL_C_EVENT / CTRL_CLOSE_EVENT into a process exit. Because
-    // this binary is compiled as a console-subsystem exe (see main.rs header),
-    // cmd/PowerShell waits for it and forwards console control events.
+    // Best-effort Ctrl+C / console-close handler. Harmless when this process
+    // has no attached console (typical Explorer launch on the GUI-subsystem
+    // Windows build — see main.rs header).
     let _ = ctrlc::set_handler(|| {
         std::process::exit(0);
     });
 
+    let mut viewport = egui::ViewportBuilder::default()
+        .with_inner_size([900.0, 620.0])
+        .with_min_inner_size([700.0, 500.0]);
+    if let Some(icon) = load_window_icon() {
+        viewport = viewport.with_icon(icon);
+    }
+
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_inner_size([900.0, 620.0])
-            .with_min_inner_size([700.0, 500.0]),
+        viewport,
         ..Default::default()
     };
     eframe::run_native(
@@ -2154,4 +2159,17 @@ pub fn run() -> Result<()> {
         Box::new(|cc| Ok(Box::new(App::new(cc)))),
     )
     .map_err(|e| anyhow::anyhow!("GUI error: {}", e))
+}
+
+/// Decodes the bundled PNG into egui's IconData. Returns None (falling back
+/// to eframe's default icon) if decoding fails — the app still launches.
+fn load_window_icon() -> Option<egui::IconData> {
+    let bytes = include_bytes!("../assets/icon-256.png");
+    let img = image::load_from_memory(bytes).ok()?.to_rgba8();
+    let (width, height) = img.dimensions();
+    Some(egui::IconData {
+        rgba: img.into_raw(),
+        width,
+        height,
+    })
 }

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- rounded-square tile background -->
+  <rect x="0" y="0" width="256" height="256" rx="44" ry="44" fill="#2d4a6b"/>
+
+  <!-- shield silhouette (nod to "Brave Shields" without using Brave's mark) -->
+  <path
+    d="M128 32
+       L204 58
+       L204 136
+       Q204 192 128 220
+       Q52 192 52 136
+       L52 58 Z"
+    fill="#e55a2e"/>
+
+  <!-- three horizontal "sliders" in white — universal 'settings/config' cue -->
+  <g fill="#ffffff">
+    <rect x="84" y="104" width="88" height="10" rx="5" ry="5"/>
+    <circle cx="128" cy="109" r="11"/>
+
+    <rect x="84" y="136" width="88" height="10" rx="5" ry="5"/>
+    <circle cx="100" cy="141" r="11"/>
+
+    <rect x="84" y="168" width="88" height="10" rx="5" ry="5"/>
+    <circle cx="156" cy="173" r="11"/>
+  </g>
+</svg>

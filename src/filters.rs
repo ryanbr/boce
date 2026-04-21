@@ -84,7 +84,7 @@ pub fn load_catalog(user_data: &Path) -> Result<Vec<CatalogEntry>> {
         serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))?;
     // Pre-sort once at load time so the GUI doesn't re-sort a ~300-entry
     // catalog on every frame.
-    entries.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+    entries.sort_by_key(|e| e.title.to_lowercase());
     Ok(entries)
 }
 

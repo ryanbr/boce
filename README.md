@@ -3,6 +3,8 @@
 A Rust tool that reads and edits Brave browser configuration files **while Brave
 is closed**. Cross-platform (Windows / Linux / macOS), runs as a GUI or a CLI.
 
+<img width="1786" height="1298" alt="boce" src="https://github.com/user-attachments/assets/8dedb74c-2a62-4305-8e72-c34c85aea5d6" />
+
 Useful when:
 
 - `brave://settings/…` is slow or unresponsive on a large profile.

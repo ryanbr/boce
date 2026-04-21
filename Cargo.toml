@@ -1,6 +1,10 @@
 [package]
 name = "brave-offline-config-editor"
-version = "0.1.3"
+# Kept at 0.0.0-dev on main. The release workflow rewrites this to the
+# tag's version (e.g. v0.1.4 -> "0.1.4") before cargo build, so published
+# binaries report the real version via --version and the .exe's file
+# metadata. Local (unreleased) builds just display "0.0.0-dev".
+version = "0.0.0-dev"
 edition = "2024"
 description = "Offline editor for Brave browser configuration — cache, shields, privacy, filters, flags, and raw preferences. Runs while Brave is closed."
 
